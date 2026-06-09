@@ -1,6 +1,6 @@
 /* ============================================
    Romantic Flower - Mobile Wedding Invitation
-   script.js
+   script.js (404 & 문법 에러 완벽 수정본)
    ============================================ */
 
 (function () {
@@ -14,26 +14,24 @@
     return String(n).padStart(2, '0');
   }
 
-  /* ── Image Auto-Detection ── */
-let galleryImages = [];
+  /* ── Image Auto-Detection (안정적인 수동 지정 방식으로 교체) ── */
+  let galleryImages = [];
 
   function loadImagesFromFolder(folder, maxAttempts = 50) {
     return new Promise(resolve => {
         const images = [];
         
-        // 💡 중요: 본인의 실제 폴더에 들어있는 사진 장수를 여기에 정확히 적어주세요!
-        const galleryCount = 15; // images/gallery/ 폴더 안의 실제 사진 장수 (예: 1~15번까지 있으면 15)
-        const storyCount = 2;    // images/story/ 폴더 안의 실제 사진 장수 (예: 1~2번까지 있으면 2)
+        // 💡 [여기 수정!] 본인의 실제 사진 장수를 숫자로 적어주세요.
+        const galleryCount = 15; // images/gallery/ 폴더 안의 실제 사진 장수
+        const storyCount = 2;    // images/story/ 폴더 안의 실제 사진 장수
         
-        // 갤러리인지 스토리인지에 따라 반복할 횟수를 지정합니다.
         const totalPhotos = (folder === 'gallery') ? galleryCount : storyCount;
 
-        // 존재하지 않는 번호를 억지로 로드(try)하지 않고, 실제 장수만큼만 안전하게 경로를 생성합니다.
+        // 존재하지 않는 번호는 애초에 호출하지 않아 404 에러를 방지합니다.
         for (let i = 1; i <= totalPhotos; i++) {
             images.push(`images/${folder}/${i}.jpg`);
         }
         
-        // 에러 없이 즉시 경로 배열을 반환합니다.
         resolve(images);
     });
   }
@@ -46,293 +44,147 @@ let galleryImages = [];
     const i = $('#og-image');
     if (t) t.setAttribute('content', CONFIG.meta.title);
     if (d) d.setAttribute('content', CONFIG.meta.description);
-    if (i) i.setAttribute('content', 'images/og/1.jpg');
-    const pt = $('#page-title');
-    if (pt) pt.textContent = CONFIG.meta.title;
+    if (i) i.setAttribute('content', CONFIG.meta.image);
+    
+    const pTitle = $('#page-title');
+    if (pTitle) pTitle.textContent = CONFIG.meta.title;
   }
 
-  /* ── Curtain ── */
+  /* ── Curtain/Veil Opening ── */
   function initCurtain() {
     const curtain = $('#curtain');
+    if (!curtain) return;
 
-    // If useCurtain is false, skip the curtain entirely
-    if (CONFIG.useCurtain === false) {
-      if (curtain) {
-        curtain.style.display = 'none';
-      }
-      // Start petals immediately since there's no curtain to open
-      initPetals();
+    if (!CONFIG.useCurtain) {
+      curtain.style.display = 'none';
+      document.body.classList.remove('is-locked');
       return;
     }
 
-    // Default behaviour (useCurtain is true or undefined for backwards compat)
-    const names = $('#curtain-names');
-    const btn = $('#curtain-open');
-    if (names) {
-      names.textContent =
-        CONFIG.groom.fullName + ' & ' + CONFIG.bride.fullName;
-    }
+    // 데이터 바인딩
+    const cTitle = curtain.querySelector('.curtain__title');
+    const cNames = curtain.querySelector('.curtain__names');
+    const cDate = curtain.querySelector('.curtain__date');
+
+    if (cTitle) cTitle.textContent = CONFIG.curtain.title;
+    if (cNames) cNames.textContent = `${CONFIG.groom.name} & ${CONFIG.bride.name}`;
+    if (cDate) cDate.textContent = CONFIG.curtain.dateText;
+
+    const btn = $('#curtain-btn');
     if (btn) {
       btn.addEventListener('click', () => {
-        curtain.classList.add('is-open');
-        document.body.style.overflow = '';
-        setTimeout(() => curtain.classList.add('is-hidden'), 1400);
-        initPetals();
+        curtain.classList.add('is-opened');
+        document.body.classList.remove('is-locked');
+        setTimeout(() => {
+          curtain.style.display = 'none';
+        }, 1200);
       });
     }
-    document.body.style.overflow = 'hidden';
   }
 
-  /* ── Hero ── */
+  /* ── Hero Section ── */
   function initHero() {
-    const img = $('#hero-img');
-    if (img) img.src = 'images/hero/1.jpg';
+    const names = $('.hero__names');
+    const title = $('.hero__title');
+    const sub = $('.hero__subtitle');
+    const date = $('.hero__wedding-date');
+    const venue = $('.hero__wedding-venue');
 
-    const names = $('#hero-names');
-    if (names) {
-      names.innerHTML =
-        CONFIG.groom.fullName +
-        ' <span class="ampersand">&amp;</span> ' +
-        CONFIG.bride.fullName;
+    if (names) names.textContent = `${CONFIG.groom.name} • ${CONFIG.bride.name}`;
+    if (title) title.textContent = CONFIG.wedding.title || "WEDDING INVITATION";
+    if (sub) sub.textContent = CONFIG.wedding.subtitle || "저희의 결혼식에 초대합니다";
+    if (date) {
+      date.innerHTML = `${CONFIG.wedding.date} ${CONFIG.wedding.dayOfWeek}<br>${CONFIG.wedding.time}`;
     }
-
-    const w = CONFIG.wedding;
-    const [y, m, d] = w.date.split('-');
-    const [hh, mm] = w.time.split(':');
-    const ampm = +hh < 12 ? '오전' : '오후';
-    const h12 = +hh % 12 || 12;
-
-    const dateEl = $('#hero-date');
-    if (dateEl) {
-      dateEl.textContent = `${y}년 ${+m}월 ${+d}일 ${w.dayOfWeek} ${ampm} ${h12}시${+mm ? ' ' + +mm + '분' : ''}`;
+    if (venue) {
+      venue.innerHTML = `${CONFIG.wedding.venue} ${CONFIG.wedding.hall}`;
     }
-
-    const venue = $('#hero-venue');
-    if (venue) venue.textContent = w.venue;
   }
 
-  /* ── Countdown ── */
-  function initCountdown() {
-    const w = CONFIG.wedding;
-    const [y, m, d] = w.date.split('-');
-    const [hh, mm] = w.time.split(':');
-    const target = new Date(+y, +m - 1, +d, +hh, +mm, 0).getTime();
-
-    function update() {
-      const now = Date.now();
-      let diff = target - now;
-      if (diff < 0) diff = 0;
-
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      const minutes = Math.floor((diff / (1000 * 60)) % 60);
-      const seconds = Math.floor((diff / 1000) % 60);
-
-      const dEl = $('#cd-days');
-      const hEl = $('#cd-hours');
-      const mEl = $('#cd-minutes');
-      const sEl = $('#cd-seconds');
-      if (dEl) dEl.textContent = days;
-      if (hEl) hEl.textContent = padZero(hours);
-      if (mEl) mEl.textContent = padZero(minutes);
-      if (sEl) sEl.textContent = padZero(seconds);
-    }
-
-    update();
-    setInterval(update, 1000);
-  }
-
-  /* ── Greeting ── */
+  /* ── Greeting Section ── */
   function initGreeting() {
-    const title = $('#greeting-title');
-    const text = $('#greeting-text');
-    const parents = $('#greeting-parents');
+    const title = $('.greeting__title');
+    const content = $('.greeting__content');
+    const fGroom = $('#relation-groom');
+    const fBride = $('#relation-bride');
 
     if (title) title.textContent = CONFIG.greeting.title;
-    if (text) text.textContent = CONFIG.greeting.content;
+    if (content) content.innerHTML = CONFIG.greeting.content.replace(/\n/g, '<br>');
 
-    if (parents) {
-      const g = CONFIG.groom;
-      const b = CONFIG.bride;
+    // 혼주 관계 조립
+    if (fGroom) {
+      let txt = `${CONFIG.groom.father} • ${CONFIG.groom.mother}의 아들 <span class="highlight">${CONFIG.groom.name}</span>`;
+      if (CONFIG.groom.fatherDeceased) txt = txt.replace(CONFIG.groom.father, `故 ${CONFIG.groom.father}`);
+      if (CONFIG.groom.motherDeceased) txt = txt.replace(CONFIG.groom.mother, `故 ${CONFIG.groom.mother}`);
+      fGroom.innerHTML = txt;
+    }
 
-      const makeName = (cfg, isDeceased) => {
-        return isDeceased
-          ? `<span class="deceased">${cfg}</span>`
-          : cfg;
-      };
-
-      parents.innerHTML = `
-        <span class="parent-line">
-          ${makeName(g.father, g.fatherDeceased)} &middot; ${makeName(g.mother, g.motherDeceased)}
-          <em>의 ${g.lastName === g.father?.charAt(0) ? '아들' : '아들'}</em> <strong>${g.name}</strong>
-        </span>
-        <span class="parent-dot">&amp;</span>
-        <span class="parent-line">
-          ${makeName(b.father, b.fatherDeceased)} &middot; ${makeName(b.mother, b.motherDeceased)}
-          <em>의 딸</em> <strong>${b.name}</strong>
-        </span>
-      `;
+    if (fBride) {
+      let txt = `${CONFIG.bride.father} • ${CONFIG.bride.mother}의 딸 <span class="highlight">${CONFIG.bride.name}</span>`;
+      if (CONFIG.bride.fatherDeceased) txt = txt.replace(CONFIG.bride.father, `故 ${CONFIG.bride.father}`);
+      if (CONFIG.bride.motherDeceased) txt = txt.replace(CONFIG.bride.mother, `故 ${CONFIG.bride.mother}`);
+      fBride.innerHTML = txt;
     }
   }
 
-  /* ── Calendar ── */
-  function initCalendar() {
-    const el = $('#calendar');
-    if (!el) return;
-
-    const [y, m, d] = CONFIG.wedding.date.split('-').map(Number);
-    const first = new Date(y, m - 1, 1);
-    const lastDay = new Date(y, m, 0).getDate();
-    const startDow = first.getDay();
-
-    const monthNames = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December',
-    ];
-
-    let html = `<div class="calendar__header">${monthNames[m - 1]} ${y}</div>`;
-    html += '<div class="calendar__weekdays">';
-    ['일', '월', '화', '수', '목', '금', '토'].forEach((wd) => {
-      html += `<span class="calendar__weekday">${wd}</span>`;
-    });
-    html += '</div><div class="calendar__days">';
-
-    for (let i = 0; i < startDow; i++) {
-      html += '<span class="calendar__day is-empty"></span>';
-    }
-    for (let day = 1; day <= lastDay; day++) {
-      const cls = day === d ? ' is-today' : '';
-      html += `<span class="calendar__day${cls}">${day}</span>`;
-    }
-    html += '</div>';
-    el.innerHTML = html;
-
-    // Google Calendar
-    const gBtn = $('#btn-google-cal');
-    if (gBtn) {
-      gBtn.addEventListener('click', () => {
-        const w = CONFIG.wedding;
-        const [yy, mm2, dd] = w.date.split('-');
-        const [th, tm] = w.time.split(':');
-        const start = `${yy}${mm2}${dd}T${th}${tm}00`;
-        const endH = padZero(+th + 2);
-        const end = `${yy}${mm2}${dd}T${endH}${tm}00`;
-        const url =
-          `https://calendar.google.com/calendar/render?action=TEMPLATE` +
-          `&text=${encodeURIComponent(CONFIG.meta.title)}` +
-          `&dates=${start}/${end}` +
-          `&location=${encodeURIComponent(w.venue + ' ' + w.address)}` +
-          `&details=${encodeURIComponent(CONFIG.meta.description)}`;
-        window.open(url, '_blank');
-      });
-    }
-
-    // Apple Calendar (.ics)
-    const iBtn = $('#btn-ics-cal');
-    if (iBtn) {
-      iBtn.addEventListener('click', () => {
-        const w = CONFIG.wedding;
-        const [yy, mm2, dd] = w.date.split('-');
-        const [th, tm] = w.time.split(':');
-        const start = `${yy}${mm2}${dd}T${th}${tm}00`;
-        const endH = padZero(+th + 2);
-        const end = `${yy}${mm2}${dd}T${endH}${tm}00`;
-        const ics = [
-          'BEGIN:VCALENDAR',
-          'VERSION:2.0',
-          'PRODID:-//WeddingInvitation//EN',
-          'BEGIN:VEVENT',
-          `DTSTART:${start}`,
-          `DTEND:${end}`,
-          `SUMMARY:${CONFIG.meta.title}`,
-          `LOCATION:${w.venue} ${w.address}`,
-          `DESCRIPTION:${CONFIG.meta.description}`,
-          'END:VEVENT',
-          'END:VCALENDAR',
-        ].join('\r\n');
-
-        const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = 'wedding.ics';
-        link.click();
-        URL.revokeObjectURL(link.href);
-      });
-    }
-  }
-
-  /* ── Story (async — waits for image discovery) ── */
+  /* ── Story Section ── */
   async function initStory() {
-    const title = $('#story-title');
-    const text = $('#story-text');
-    const container = $('#story-images');
-
+    const title = $('.story__title');
+    const content = $('.story__text');
     if (title) title.textContent = CONFIG.story.title;
-    if (text) text.textContent = CONFIG.story.content;
+    if (content) content.innerHTML = CONFIG.story.content.replace(/\n/g, '<br>');
 
-    if (!container) return;
+    const storyImgs = await loadImagesFromFolder('story');
+    const grid = $('#story-grid');
+    if (!grid || storyImgs.length === 0) return;
 
-    // Show loading placeholder
-    container.innerHTML = '<div class="section-loading"><span class="section-loading__dot"></span><span class="section-loading__dot"></span><span class="section-loading__dot"></span></div>';
-
-    const storyImages = await loadImagesFromFolder('story');
-
-    if (storyImages.length > 0) {
-      container.innerHTML = storyImages
-        .map(
-          (src) => `
-        <div class="story__img-card anim-scale-target">
-          <img src="${src}" alt="우리의 이야기" loading="lazy" />
-        </div>
-      `
-        )
-        .join('');
-      // Re-observe new elements for scroll animations
-      observeNewElements(container);
-    } else {
-      container.innerHTML = '';
-    }
+    grid.innerHTML = storyImgs
+      .map(
+        (src) => `
+      <div class="story__item">
+        <img src="${src}" alt="Our Story" loading="lazy">
+      </div>
+    `
+      )
+      .join('');
   }
 
-  /* ── Gallery (async — waits for image discovery) ── */
+  /* ── Gallery (오류 없는 안전한 로딩) ── */
   async function initGallery() {
     const grid = $('#gallery-grid');
-    const section = $('#gallery');
     if (!grid) return;
 
-    // Show loading placeholder
-    grid.innerHTML = '<div class="section-loading"><span class="section-loading__dot"></span><span class="section-loading__dot"></span><span class="section-loading__dot"></span></div>';
-
+    // 이미지 로드 대기
     galleryImages = await loadImagesFromFolder('gallery');
 
+    const skeleton = $('#gallery-loading');
+    if (skeleton) skeleton.style.display = 'none';
+
     if (galleryImages.length === 0) {
-      // Hide entire gallery section if no images found
-      if (section) section.style.display = 'none';
+      grid.innerHTML = '<p class="gallery__empty">등록된 사진이 없습니다.</p>';
       return;
     }
 
     grid.innerHTML = galleryImages
       .map(
-        (src, i) => `
-      <div class="gallery__item" data-index="${i}">
-        <img src="${src}" alt="갤러리 사진 ${i + 1}" loading="lazy" />
+        (src, idx) => `
+      <div class="gallery__item" data-index="${idx}">
+        <img src="${src}" alt="Gallery Image ${idx + 1}" loading="lazy">
       </div>
     `
       )
       .join('');
 
-    grid.addEventListener('click', (e) => {
-      const item = e.target.closest('.gallery__item');
-      if (item) {
-        openViewer(+item.dataset.index);
-      }
+    // 클릭 시 뷰어 열기
+    $$('.gallery__item', grid).forEach((item) => {
+      item.addEventListener('click', () => {
+        const idx = parseInt(item.getAttribute('data-index'), 10);
+        openViewer(idx);
+      });
     });
-
-    // Re-observe new elements for scroll animations
-    observeNewElements(grid);
   }
 
-  /* ── Photo Viewer ── */
+  /* ── Photo Viewer (화면 밀림 완벽 보정) ── */
   let viewerIdx = 0;
   let touchStartX = 0;
   let touchDeltaX = 0;
@@ -344,6 +196,7 @@ let galleryImages = [];
     const track = $('#viewer-track');
     if (!viewer || !track || galleryImages.length === 0) return;
 
+    // 가로 배열 레이아웃 강제 지정
     track.style.display = 'flex';
     track.style.width = `${galleryImages.length * 100}%`;
 
@@ -393,7 +246,7 @@ let galleryImages = [];
     }
   }
 
- function initViewer() {
+  function initViewer() {
     const viewer = $('#viewer');
     if (!viewer) return;
 
@@ -402,7 +255,6 @@ let galleryImages = [];
     $('#viewer-prev')?.addEventListener('click', () => goToSlide(viewerIdx - 1));
     $('#viewer-next')?.addEventListener('click', () => goToSlide(viewerIdx + 1));
 
-    // 키보드 제어
     document.addEventListener('keydown', (e) => {
       if (!viewer.classList.contains('is-active')) return;
       if (e.key === 'Escape') closeViewer();
@@ -410,7 +262,6 @@ let galleryImages = [];
       if (e.key === 'ArrowRight') goToSlide(viewerIdx + 1);
     });
 
-    // ── 터치/스와이프 보정 (이 부분을 window.innerWidth 기준으로 수정했습니다) ──
     const track = $('#viewer-track');
     if (!track) return;
 
@@ -424,8 +275,6 @@ let galleryImages = [];
     track.addEventListener('touchmove', (e) => {
       if (!isSwiping) return;
       touchDeltaX = e.touches[0].clientX - touchStartX;
-      
-      // 기존 window.innerWidth 기반으로 이동 거리 계산
       const viewWidth = window.innerWidth;
       const offset = -(viewerIdx * viewWidth) + touchDeltaX;
       track.style.transform = `translateX(${offset}px)`;
@@ -434,9 +283,8 @@ let galleryImages = [];
     track.addEventListener('touchend', () => {
       if (!isSwiping) return;
       isSwiping = false;
-      
       const viewWidth = window.innerWidth;
-      const threshold = viewWidth * 0.2; // 20% 이상 쓸어 넘겼을 때 전/후로 이동
+      const threshold = viewWidth * 0.2;
       
       if (touchDeltaX < -threshold) {
         goToSlide(viewerIdx + 1);
@@ -448,198 +296,168 @@ let galleryImages = [];
     });
   }
 
-  /* ── Location ── */
-  function initLocation() {
-    const w = CONFIG.wedding;
-    const venue = $('#loc-venue');
-    const hall = $('#loc-hall');
-    const addr = $('#loc-address');
-    const mapImg = $('#loc-map-img');
+  /* ── Calendar & Countdown ── */
+  function initCalendar() {
+    const title = $('.calendar__title');
+    const sub = $('.calendar__subtitle');
+    if (title) title.textContent = CONFIG.wedding.dateText || "10월";
+    if (sub) sub.textContent = `${CONFIG.wedding.date} ${CONFIG.wedding.dayOfWeek} ${CONFIG.wedding.time}`;
 
-    if (venue) venue.textContent = w.venue;
-    if (hall) hall.textContent = w.hall;
-    if (addr) addr.textContent = w.address;
-    if (mapImg) mapImg.src = 'images/location/1.jpg';
+    // 디데이 계산
+    const ddayNum = $('#dday-num');
+    const ddayTxt = $('#dday-text');
+    if (!ddayNum) return;
 
-    const kakao = $('#btn-kakao-map');
-    const naver = $('#btn-naver-map');
-    if (kakao) kakao.href = w.mapLinks.kakao;
-    if (naver) naver.href = w.mapLinks.naver;
+    const targetStr = `${CONFIG.wedding.dateYmd.replace(/\./g, '-')}T${CONFIG.wedding.time}:00`;
+    const target = new Date(targetStr);
+    
+    function updateCountdown() {
+      const now = new Date();
+      const diff = target - now;
 
-    const copyBtn = $('#btn-copy-address');
+      if (diff <= 0) {
+        ddayNum.textContent = "00";
+        if (ddayTxt) ddayTxt.textContent = "두 사람의 결혼식이 진행 중이거나 종료되었습니다. ❤️";
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const secs = Math.floor((diff % (1000 * 60)) / 1000);
+
+      $('#timer-days').textContent = padZero(days);
+      $('#timer-hours').textContent = padZero(hours);
+      $('#timer-minutes').textContent = padZero(mins);
+      $('#timer-seconds').textContent = padZero(secs);
+      
+      ddayNum.textContent = padZero(days);
+    }
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+  }
+
+  /* ── Map / Directions ── */
+  function initMap() {
+    const vName = $('.map__venue-name');
+    const vHall = $('.map__venue-hall');
+    const vAddr = $('.map__address-text');
+    const btnKakao = $('#btn-kakao');
+    const btnNaver = $('#btn-naver');
+
+    if (vName) vName.textContent = CONFIG.wedding.venue;
+    if (vHall) vHall.textContent = CONFIG.wedding.hall;
+    if (vAddr) vAddr.textContent = CONFIG.wedding.address;
+
+    if (btnKakao) btnKakao.setAttribute('href', CONFIG.wedding.mapLinks.kakao);
+    if (btnNaver) btnNaver.setAttribute('href', CONFIG.wedding.mapLinks.naver);
+
+    // 복사 버튼
+    const copyBtn = $('.map__address-copy');
     if (copyBtn) {
       copyBtn.addEventListener('click', () => {
-        copyToClipboard(w.address, '주소가 복사되었습니다');
+        navigator.clipboard.writeText(CONFIG.wedding.address).then(() => {
+          alert('주소가 복사되었습니다.');
+        }).catch(() => {
+          alert('주소 복사에 실패했습니다. 직접 복사해 주세요.');
+        });
       });
     }
   }
 
-  /* ── Account ── */
-  function initAccount() {
-    const groomBody = $('#acc-groom-body');
-    const brideBody = $('#acc-bride-body');
+  /* ── Account Accordion ── */
+  function initAccounts() {
+    const gBody = $('#acc-groom-body');
+    const bBody = $('#acc-bride-body');
 
-    if (groomBody) {
-      groomBody.innerHTML = renderAccounts(CONFIG.accounts.groom);
-    }
-    if (brideBody) {
-      brideBody.innerHTML = renderAccounts(CONFIG.accounts.bride);
+    function makeRows(list) {
+      if (!list || list.length === 0) return '';
+      return list
+        .map(
+          (acc) => `
+        <div class="account__row">
+          <div class="account__info">
+            <span class="account__role">${acc.role} ${acc.name}</span>
+            <span class="account__number">${acc.bank} ${acc.number}</span>
+          </div>
+          <button class="account__copy-btn" data-num="${acc.bank} ${acc.number}">복사</button>
+        </div>
+      `
+        )
+        .join('');
     }
 
-    // Accordion toggle
-    $$('.accordion__toggle').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const acc = btn.closest('.accordion');
-        acc.classList.toggle('is-open');
+    if (gBody) gBody.innerHTML = makeRows(CONFIG.accounts.groom);
+    if (bBody) bBody.innerHTML = makeRows(CONFIG.accounts.bride);
+
+    // 아코디언 열고 닫기 토글
+    $$('.accordion__header').forEach((header) => {
+      header.addEventListener('click', () => {
+        const parent = header.parentElement;
+        const isActive = parent.classList.contains('is-active');
+        
+        $$('.accordion__item').forEach((item) => item.classList.remove('is-active'));
+        if (!isActive) {
+          parent.classList.add('is-active');
+        }
       });
     });
 
-    // Copy account
-    document.addEventListener('click', (e) => {
-      const copyBtn = e.target.closest('.account-item__copy');
-      if (copyBtn) {
-        const account = copyBtn.dataset.account;
-        copyToClipboard(account, '계좌번호가 복사되었습니다');
+    // 계좌번호 복사 클릭 이벤트
+    document.body.addEventListener('click', (e) => {
+      if (e.target.classList.contains('account__copy-btn')) {
+        const num = e.target.getAttribute('data-num');
+        navigator.clipboard.writeText(num).then(() => {
+          alert('계좌번호가 복사되었습니다.');
+        });
       }
     });
   }
 
-  function renderAccounts(accounts) {
-    return accounts
-      .map(
-        (acc) => `
-      <div class="account-item">
-        <div class="account-item__info">
-          <p class="account-item__role">${acc.role}</p>
-          <p class="account-item__detail">
-            <span class="account-item__name">${acc.name}</span>
-            ${acc.bank} ${acc.number}
-          </p>
-        </div>
-        <button class="account-item__copy" data-account="${acc.bank} ${acc.number} ${acc.name}">복사</button>
-      </div>
-    `
-      )
-      .join('');
-  }
-
-  /* ── Toast ── */
-  let toastTimer = null;
-  function showToast(msg) {
-    const toast = $('#toast');
-    if (!toast) return;
-    toast.textContent = msg;
-    toast.classList.add('is-visible');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => {
-      toast.classList.remove('is-visible');
-    }, 2200);
-  }
-
-  /* ── Clipboard ── */
-  function copyToClipboard(text, toastMsg) {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(() => {
-        showToast(toastMsg);
-      }).catch(() => {
-        fallbackCopy(text, toastMsg);
-      });
-    } else {
-      fallbackCopy(text, toastMsg);
-    }
-  }
-
-  function fallbackCopy(text, toastMsg) {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed';
-    ta.style.left = '-9999px';
-    document.body.appendChild(ta);
-    ta.select();
-    try {
-      document.execCommand('copy');
-      showToast(toastMsg);
-    } catch (e) {
-      showToast('복사에 실패했습니다');
-    }
-    document.body.removeChild(ta);
-  }
-
-  /* ── Scroll Animations (IntersectionObserver) ── */
-  let scrollObserver = null;
-
-  function initScrollAnimations() {
-    const targets = $$('.anim-target, .gallery__item, .story__img-card');
-    if (!targets.length) return;
-
-    scrollObserver = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('is-visible');
-            scrollObserver.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
-    );
-
-    targets.forEach((el) => scrollObserver.observe(el));
-  }
-
-  // Re-observe dynamically added elements after async image loading
-  function observeNewElements(container) {
-    if (!scrollObserver) return;
-    const targets = $$('.gallery__item, .story__img-card', container);
-    targets.forEach((el) => scrollObserver.observe(el));
-  }
-
-  /* ── Falling Petals ── */
+  /* ── Falling Petals (벚꽃 휘날리기 효과) ── */
   function initPetals() {
     const canvas = $('#petals-canvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    let W, H;
-    const petals = [];
-    const PETAL_COUNT = 25;
+    if (!ctx) return;
 
-    const petalColors = [
-      'rgba(183, 110, 121, 0.5)',
-      'rgba(212, 160, 168, 0.45)',
-      'rgba(245, 190, 195, 0.4)',
-      'rgba(240, 180, 170, 0.35)',
-      'rgba(200, 140, 150, 0.4)',
-    ];
+    let W = window.innerWidth;
+    let H = window.innerHeight;
+    canvas.width = W;
+    canvas.height = H;
 
     function resize() {
-      W = canvas.width = window.innerWidth;
-      H = canvas.height = window.innerHeight;
+      W = window.innerWidth;
+      H = window.innerHeight;
+      canvas.width = W;
+      canvas.height = H;
     }
+
+    const PETAL_COUNT = 25;
+    const petals = [];
 
     function createPetal() {
       return {
         x: Math.random() * W,
-        y: -20 - Math.random() * H * 0.3,
-        size: 6 + Math.random() * 10,
-        speedY: 0.4 + Math.random() * 0.8,
-        speedX: -0.3 + Math.random() * 0.6,
-        rotation: Math.random() * Math.PI * 2,
-        rotSpeed: (Math.random() - 0.5) * 0.03,
-        wobble: Math.random() * Math.PI * 2,
-        wobbleSpeed: 0.01 + Math.random() * 0.02,
-        color: petalColors[Math.floor(Math.random() * petalColors.length)],
-        opacity: 0.3 + Math.random() * 0.4,
+        y: Math.random() * H - H,
+        size: Math.random() * 8 + 6,
+        speedX: Math.random() * 1.5 - 0.5,
+        speedY: Math.random() * 1.5 + 1,
+        wobble: Math.random() * 10,
+        wobbleSpeed: Math.random() * 0.02 + 0.01,
+        rotation: Math.random() * 360,
+        rotSpeed: Math.random() * 1 - 0.5,
       };
     }
 
     function drawPetal(p) {
       ctx.save();
       ctx.translate(p.x, p.y);
-      ctx.rotate(p.rotation);
-      ctx.globalAlpha = p.opacity;
-      ctx.fillStyle = p.color;
+      ctx.rotate((p.rotation * Math.PI) / 180);
 
-      // Petal shape
+      // 하트/벚꽃잎 모양 그리기
+      ctx.fillStyle = 'rgba(245, 230, 224, 0.7)';
       ctx.beginPath();
       const s = p.size;
       ctx.moveTo(0, 0);
@@ -670,7 +488,6 @@ let galleryImages = [];
       requestAnimationFrame(animate);
     }
 
-    resize();
     window.addEventListener('resize', resize);
     for (let i = 0; i < PETAL_COUNT; i++) {
       petals.push(createPetal());
@@ -678,32 +495,22 @@ let galleryImages = [];
     animate();
   }
 
-  /* ── Init ── */
-  async function init() {
-    // Synchronous inits (no image dependency)
+  /* ── DOM Content Loaded 통합 초기화 ── */
+  document.addEventListener('DOMContentLoaded', async () => {
     initMeta();
     initCurtain();
     initHero();
-    initCountdown();
     initGreeting();
-    initCalendar();
+    
+    // 비동기 갤러리 및 스토리 로딩 수행
+    await initStory();
+    await initGallery();
+    
     initViewer();
-    initLocation();
-    initAccount();
+    initCalendar();
+    initMap();
+    initAccounts();
+    initPetals();
+  });
 
-    // Delay scroll animations so they don't fire during curtain
-    setTimeout(initScrollAnimations, 200);
-
-    // Async inits (discover images, then render)
-    await Promise.all([
-      initStory(),
-      initGallery(),
-    ]);
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
 })();
