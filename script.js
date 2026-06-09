@@ -355,11 +355,14 @@
     const track = $('#viewer-track');
     if (!viewer || !track || galleryImages.length === 0) return;
 
+    track.style.display = 'flex';
+    track.style.width = `${galleryImages.length * 100}%`;
+
     track.innerHTML = galleryImages
       .map(
         (src) => `
-      <div class="viewer__slide">
-        <img src="${src}" alt="" loading="lazy" />
+      <div class="viewer__slide" style="width: ${100 / galleryImages.length}%; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+        <img src="${src}" alt="" loading="lazy" style="max-width: 100%; max-height: 100vh; object-fit: contain;" />
       </div>
     `
       )
@@ -368,7 +371,10 @@
     viewer.classList.add('is-active');
     viewer.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
-    goToSlide(viewerIdx, false);
+    
+    setTimeout(() => {
+      goToSlide(viewerIdx, false);
+    }, 50);
   }
 
   function closeViewer() {
@@ -383,15 +389,16 @@
     const track = $('#viewer-track');
     const counter = $('#viewer-counter');
     const total = galleryImages.length;
-    if (total === 0) return;
+    if (total === 0 || !track) return;
     if (idx < 0) idx = 0;
     if (idx >= total) idx = total - 1;
     viewerIdx = idx;
 
-    if (track) {
-      track.style.transition = animate ? 'transform 0.3s ease' : 'none';
-      track.style.transform = `translateX(-${idx * track.parentElement.offsetWidth}px)`;
-    }
+    const viewWidth = window.innerWidth;
+
+    track.style.transition = animate ? 'transform 0.3s ease' : 'none';
+    track.style.transform = `translateX(-${idx * viewWidth}px)`;
+    
     if (counter) {
       counter.textContent = `${idx + 1} / ${total}`;
     }
