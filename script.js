@@ -15,27 +15,29 @@
   }
 
   /* ── Image Auto-Detection ── */
-let galleryImages = [];
+  let galleryImages = [];
 
   function loadImagesFromFolder(folder) {
     return new Promise(resolve => {
         const images = [];
         
-        // 💡 본인의 실제 이미지 장수를 여기에 정확하게 적어주세요!
-        const galleryCount = 15; // 갤러리 폴더(images/gallery/)에 있는 실제 JPG 사진 장수
-        const storyCount = 2;    // 스토리 폴더(images/story/)에 있는 실제 JPG 사진 장수
+        // 💡 실제 폴더에 있는 사진 장수를 정확히 입력해주세요!
+        const galleryCount = 15; // gallery 폴더 안의 실제 이미지 장수
+        const storyCount = 2;    // story 폴더 안의 실제 이미지 장수
         
         const maxCount = (folder === 'gallery') ? galleryCount : storyCount;
 
-        // 존재하지 않는 번호를 테스트하지 않고, 있는 장수만큼 즉시 경로 배열을 만듭니다.
+        // 웹사이트가 실행 중인 현재 기본 주소 경로를 추출합니다.
+        const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
+
         for (let current = 1; current <= maxCount; current++) {
-            images.push(`images/${folder}/${current}.jpg`);
+            // 주소가 꼬이지 않도록 현재 실행 경로 기준(baseUrl)으로 절대 주소를 만듭니다.
+            images.push(`${baseUrl}images/${folder}/${current}.jpg`);
         }
         
         resolve(images);
     });
   }
-
   /* ── Meta Tags ── */
   function initMeta() {
     document.title = CONFIG.meta.title;
