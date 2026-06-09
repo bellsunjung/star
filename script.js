@@ -15,37 +15,24 @@
   }
 
   /* ── Image Auto-Detection ── */
-  // Discovered images stored here for use across functions
-  let galleryImages = [];
+let galleryImages = [];
 
-  function loadImagesFromFolder(folder, maxAttempts = 50) {
+  function loadImagesFromFolder(folder) {
     return new Promise(resolve => {
         const images = [];
-        let current = 1;
-        let consecutiveFails = 0;
+        
+        // 💡 본인의 실제 이미지 장수를 여기에 정확하게 적어주세요!
+        const galleryCount = 15; // 갤러리 폴더(images/gallery/)에 있는 실제 JPG 사진 장수
+        const storyCount = 2;    // 스토리 폴더(images/story/)에 있는 실제 JPG 사진 장수
+        
+        const maxCount = (folder === 'gallery') ? galleryCount : storyCount;
 
-        function tryNext() {
-            if (current > maxAttempts || consecutiveFails >= 3) {
-                resolve(images);
-                return;
-            }
-            const img = new Image();
-            const path = `images/${folder}/${current}.jpg`;
-            img.onload = function() {
-                images.push(path);
-                consecutiveFails = 0;
-                current++;
-                tryNext();
-            };
-            img.onerror = function() {
-                consecutiveFails++;
-                current++;
-                tryNext();
-            };
-            img.src = path;
+        // 존재하지 않는 번호를 테스트하지 않고, 있는 장수만큼 즉시 경로 배열을 만듭니다.
+        for (let current = 1; current <= maxCount; current++) {
+            images.push(`images/${folder}/${current}.jpg`);
         }
-
-        tryNext();
+        
+        resolve(images);
     });
   }
 
