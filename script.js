@@ -404,7 +404,7 @@
     }
   }
 
-  function initViewer() {
+ function initViewer() {
     const viewer = $('#viewer');
     if (!viewer) return;
 
@@ -413,7 +413,7 @@
     $('#viewer-prev')?.addEventListener('click', () => goToSlide(viewerIdx - 1));
     $('#viewer-next')?.addEventListener('click', () => goToSlide(viewerIdx + 1));
 
-    // Keyboard
+    // 키보드 제어
     document.addEventListener('keydown', (e) => {
       if (!viewer.classList.contains('is-active')) return;
       if (e.key === 'Escape') closeViewer();
@@ -421,7 +421,7 @@
       if (e.key === 'ArrowRight') goToSlide(viewerIdx + 1);
     });
 
-    // Touch/Swipe
+    // ── 터치/스와이프 보정 (이 부분을 window.innerWidth 기준으로 수정했습니다) ──
     const track = $('#viewer-track');
     if (!track) return;
 
@@ -435,14 +435,20 @@
     track.addEventListener('touchmove', (e) => {
       if (!isSwiping) return;
       touchDeltaX = e.touches[0].clientX - touchStartX;
-      const offset = -(viewerIdx * window.innerWidth) + touchDeltaX;
+      
+      // 기존 window.innerWidth 기반으로 이동 거리 계산
+      const viewWidth = window.innerWidth;
+      const offset = -(viewerIdx * viewWidth) + touchDeltaX;
       track.style.transform = `translateX(${offset}px)`;
     }, { passive: true });
 
     track.addEventListener('touchend', () => {
       if (!isSwiping) return;
       isSwiping = false;
-      const threshold = window.innerWidth * 0.2;
+      
+      const viewWidth = window.innerWidth;
+      const threshold = viewWidth * 0.2; // 20% 이상 쓸어 넘겼을 때 전/후로 이동
+      
       if (touchDeltaX < -threshold) {
         goToSlide(viewerIdx + 1);
       } else if (touchDeltaX > threshold) {
