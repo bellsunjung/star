@@ -15,29 +15,29 @@
   }
 
   /* ── Image Auto-Detection ── */
-  let galleryImages = [];
+let galleryImages = [];
 
-  function loadImagesFromFolder(folder) {
+  function loadImagesFromFolder(folder, maxAttempts = 50) {
     return new Promise(resolve => {
         const images = [];
         
-        // 💡 실제 폴더에 있는 사진 장수를 정확히 입력해주세요!
-        const galleryCount = 15; // gallery 폴더 안의 실제 이미지 장수
-        const storyCount = 2;    // story 폴더 안의 실제 이미지 장수
+        // 💡 중요: 본인의 실제 폴더에 들어있는 사진 장수를 여기에 정확히 적어주세요!
+        const galleryCount = 15; // images/gallery/ 폴더 안의 실제 사진 장수 (예: 1~15번까지 있으면 15)
+        const storyCount = 2;    // images/story/ 폴더 안의 실제 사진 장수 (예: 1~2번까지 있으면 2)
         
-        const maxCount = (folder === 'gallery') ? galleryCount : storyCount;
+        // 갤러리인지 스토리인지에 따라 반복할 횟수를 지정합니다.
+        const totalPhotos = (folder === 'gallery') ? galleryCount : storyCount;
 
-        // 웹사이트가 실행 중인 현재 기본 주소 경로를 추출합니다.
-        const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
-
-        for (let current = 1; current <= maxCount; current++) {
-            // 주소가 꼬이지 않도록 현재 실행 경로 기준(baseUrl)으로 절대 주소를 만듭니다.
-            images.push(`${baseUrl}images/${folder}/${current}.jpg`);
+        // 존재하지 않는 번호를 억지로 로드(try)하지 않고, 실제 장수만큼만 안전하게 경로를 생성합니다.
+        for (let i = 1; i <= totalPhotos; i++) {
+            images.push(`images/${folder}/${i}.jpg`);
         }
         
+        // 에러 없이 즉시 경로 배열을 반환합니다.
         resolve(images);
     });
   }
+
   /* ── Meta Tags ── */
   function initMeta() {
     document.title = CONFIG.meta.title;
