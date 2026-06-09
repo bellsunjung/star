@@ -390,7 +390,7 @@
 
     if (track) {
       track.style.transition = animate ? 'transform 0.3s ease' : 'none';
-      track.style.transform = `translateX(-${idx * 100}%)`;
+      track.style.transform = `translateX(-${idx * window.innerWidth}px)`;
     }
     if (counter) {
       counter.textContent = `${idx + 1} / ${total}`;
